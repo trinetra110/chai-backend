@@ -43,6 +43,10 @@ const getUserTweets = asyncHandler(async (req, res) => {
     // TODO: get user tweets
     const { userId } = req.params
 
+    if (!isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid user ID")
+    }
+
     const user = await User.findById(userId)
 
     if (!user) {
@@ -62,6 +66,10 @@ const updateTweet = asyncHandler(async (req, res) => {
     //TODO: update tweet
     const { tweetId } = req.params
     const { text } = req.body
+
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError(400, "Invalid tweet ID")
+    }
 
     if (!text || text.trim().length === 0) {
         throw new ApiError(400, "Tweet content is required")
@@ -93,6 +101,10 @@ const updateTweet = asyncHandler(async (req, res) => {
 const deleteTweet = asyncHandler(async (req, res) => {
     //TODO: delete tweet
     const { tweetId } = req.params
+
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError(400, "Invalid tweet ID")
+    }
 
     const tweet = await Tweet.findById(tweetId)
 
