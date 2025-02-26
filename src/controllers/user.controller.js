@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js"
 import { User} from "../models/user.model.js"
-import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {uploadOnCloudinary, deleteFromCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
@@ -295,11 +295,26 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
 
     //TODO: delete old image - assignment
 
+    // upload new avatar on cloudinary
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
     if (!avatar.url) {
-        throw new ApiError(400, "Error while uploading on avatar")
+        throw new ApiError(400, "Error while uploading new avatar")
         
+    }
+    
+    const fetchUser = await User.findById(
+        req.user?._id
+    ).select("-password")
+
+    const oldAvatarPublicId = fetchUser.avatar?.split("/").pop()?.split(".")[0]
+
+    // delete old avatar from cloudinary
+    if (oldAvatarPublicId) {
+        const response = await deleteFromCloudinary(oldAvatarPublicId)
+        if (response === null) {
+            throw new ApiError(400, "Error while deleting old avatar")
+        }
     }
 
     const user = await User.findByIdAndUpdate(
@@ -328,12 +343,26 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
 
     //TODO: delete old image - assignment
 
-
+    // upload new cover image on cloudinary
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
     if (!coverImage.url) {
-        throw new ApiError(400, "Error while uploading on avatar")
+        throw new ApiError(400, "Error while uploading new cover image")
         
+    }
+
+    const fetchUser = await User.findById(
+        req.user?._id
+    ).select("-password")
+
+    const oldCoverImagePublicId = fetchUser.coverImage?.split("/").pop()?.split(".")[0]
+
+    // delete old cover image from cloudinary
+    if (oldCoverImagePublicId) {
+        const response = await deleteFromCloudinary(oldCoverImagePublicId)
+        if (response === null) {
+            throw new ApiError(400, "Error while deleting old cover image")
+        }
     }
 
     const user = await User.findByIdAndUpdate(
